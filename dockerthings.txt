@@ -1,0 +1,13 @@
+docker run -d --name mysql-server			\
+	--network mysql-net					\
+	-p "3306:3306"						\
+	-e "MYSQL_RANDOM_ROOT_PASSWORD=yes"	\
+	-e "MYSQL_DATABASE=tarpaulin"		\
+	-e "MYSQL_USER=tarpaulin"			\
+	-e "MYSQL_PASSWORD=hunter2" 			\
+	mysql
+
+docker run --rm -it		\
+	--network mysql-net	\
+	mysql			\
+		mysql -h mysql-server -u tarpaulin -p

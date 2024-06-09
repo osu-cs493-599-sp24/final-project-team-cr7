@@ -1,0 +1,15 @@
+{
+  "name": "final-project-team-cr7",
+  "version": "1.0.0",
+  "description": "* Sonny Box (sonnybox) * John Tran (johnyu013) * Yen-Ting (Andy) Chou (practicalPro) * Aakash Murthy (aakashmurthy)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

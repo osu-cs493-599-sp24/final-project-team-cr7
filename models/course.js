@@ -25,10 +25,11 @@ const Course = sequelize.define('Course', {
 })
 exports.Course = Course
 
-exports.CourseClientFields = [
-    'subject',
-    'number',
-    'title',
-    'term',
-    'instructorId'
-]
+const CourseSchema = {
+    subject: { required: true },
+    number: { required: true },
+    title: { required: true },
+    term: { required: true },
+    instructorId: { required: true }
+}
+exports.CourseSchema = CourseSchema

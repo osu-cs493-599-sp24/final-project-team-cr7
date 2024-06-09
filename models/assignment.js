@@ -22,9 +22,10 @@ const Assignment = sequelize.define('Assignment', {
 })
 exports.Assignment = Assignment
 
-exports.AssignmentClientFields = [
-    'courseId',
-    'title',
-    'points',
-    'due'
-]
+const AssignmentSchema = {
+    courseId: { required: true },
+    title: { required: true },
+    points: { required: true },
+    due: { required: true },
+}
+exports.AssignmentSchema = AssignmentSchema

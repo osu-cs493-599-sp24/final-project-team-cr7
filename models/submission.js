@@ -7,15 +7,15 @@ const Submission = sequelize.define('Submission', {
         allowNull: false
     },
     studentId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     timestamp: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING,
         allowNull: false
     },
     grade: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.NUMBER,
         allowNull: true
     },
     file: {

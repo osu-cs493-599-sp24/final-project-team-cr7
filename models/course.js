@@ -7,7 +7,7 @@ const Course = sequelize.define('Course', {
         allowNull: false
     },
     number: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false
     },
     title: {
@@ -19,7 +19,7 @@ const Course = sequelize.define('Course', {
         allowNull: false
     },
     instructorId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     }
 })

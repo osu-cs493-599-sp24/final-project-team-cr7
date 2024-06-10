@@ -1,6 +1,9 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require("../lib/sequelize.js")
 
+const { User } = require('./user')
+const { Assignment } = require('./assignment')
+
 const Submission = sequelize.define('Submission', {
     assignmentId: {
         type: DataTypes.INTEGER,
@@ -24,6 +27,13 @@ const Submission = sequelize.define('Submission', {
     }
 
 })
+
+Submission.belongsTo(Assignment)
+Assignment.hasMany(Submission)
+
+Submission.belongsTo(User, {sourceKey: 'studentId' })
+User.hasMany(Submission, { foreignKey: 'studentId'})
+
 exports.Submission = Submission
 
 const SubmissionSchema = {

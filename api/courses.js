@@ -3,7 +3,7 @@ const { ValidationError } = require('sequelize');
 const { Course, CourseClientFields } = require('../model/course');
 const router = Router();
 
-router.get('/courses', async (req, res) => {
+router.get('/courses', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 10; // Define the number of courses per page
@@ -34,7 +34,7 @@ router.get('/courses', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "An error occurred while fetching courses." });
+    next(err); // Pass the error to the next middleware
   }
 });
 

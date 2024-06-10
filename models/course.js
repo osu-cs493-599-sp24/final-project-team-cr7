@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require("../lib/sequelize.js")
 
+const { User } = require('./user')
+
 const Course = sequelize.define('Course', {
     subject: {
         type: DataTypes.STRING,
@@ -23,12 +25,18 @@ const Course = sequelize.define('Course', {
         allowNull: false
     }
 })
+
+// Setup relationship between Course and User for instructorID
+Course.belongsTo(User, { foreignKey: 'instructorId' })
+User.hasMany(Course, { foreignKey: 'instructorId'})
+
 exports.Course = Course
 
-exports.CourseClientFields = [
-    'subject',
-    'number',
-    'title',
-    'term',
-    'instructorId'
-]
+const CourseSchema = {
+    subject: { required: true },
+    number: { required: true },
+    title: { required: true },
+    term: { required: true },
+    instructorId: { required: true }
+}
+exports.CourseSchema = CourseSchema

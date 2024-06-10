@@ -24,7 +24,7 @@ router.get('/courses', async (req, res, next) => {
       where: filters,
       limit,
       offset,
-      attributes: { exclude: ['students', 'assignments'] } // Exclude students and assignments
+      attributes: { exclude: ['createdAt', 'updatedAt', 'students', 'assignments'] } // Exclude students and assignments
     });
 
     res.status(200).json({

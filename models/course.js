@@ -27,8 +27,8 @@ const Course = sequelize.define('Course', {
 })
 
 // Setup relationship between Course and User for instructorID
-Course.hasOne(User, { foreignKey: 'id', sourceKey: 'instructorId' })
-User.hasMany(Course, { foreignKey: 'instructorId', sourceKey: 'id' })
+Course.belongsTo(User, { foreignKey: 'instructorId' })
+User.hasMany(Course, { foreignKey: 'instructorId'})
 
 exports.Course = Course
 

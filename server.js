@@ -4,11 +4,12 @@ const morgan = require('morgan')
 const redis = require('redis')
 const api = require('./api')
 const sequelize = require('./lib/sequelize')
+const { verifyAuthentication } = require('./lib/auth')
 
-const app = express();
-const port = process.env.PORT || 8080;
+const app = express()
+const port = process.env.PORT || 8080
 
-// Redis information
+// Redis rate limiting
 const redisHost = process.env.REDIS_HOST || "localhost"
 const redisPort = process.env.REDIS_PORT || "6379"
 const redisClient = redis.createClient({
@@ -25,10 +26,7 @@ async function rateLimit(req, res, next) {
 
     let rateLimitMaxRequests
     let rateLimitRefreshRate
-    
     verify = verifyAuthentication(req)
-
-    // Set to 30 for authorized users, else 10
     rateLimitMaxRequests = verify ? 30 : 10
     rateLimitRefreshRate = rateLimitMaxRequests / rateLimitWindowMillis
 
@@ -68,17 +66,17 @@ async function rateLimit(req, res, next) {
     }
 }
 
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.static('public'));
+app.use(morgan('dev'))
+app.use(express.json())
+app.use(express.static('public'))
 app.use(rateLimit)
-app.use('/', api);
+app.use('/', api)
 
 app.use('/', function (req, res, next) {
     res.status(404).json({
         error: "Requested resource " + req.originalUrl + " does not exist"
-    });
-});
+    })
+})
 
 app.use('/', function (err, req, res, next) {
     console.error("== Error:", err)
@@ -94,8 +92,8 @@ sequelize.sync().then(async function () {
         console.log("Error connecting to redis server: ", err)
     }
     app.listen(port, function() {
-        console.log("== Server is running on port", port);
-    });
+        console.log("== Server is running on port", port)
+    })
 })
 
 // const express = require('express');

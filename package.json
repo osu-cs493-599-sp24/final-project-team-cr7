@@ -1,26 +1,33 @@
 {
-  "name": "final-project-team-cr7",
-  "version": "1.0.0",
-  "description": "* Sonny Box (sonnybox) * John Tran (johnyu013) * Yen-Ting (Andy) Chou (practicalPro) * Aakash Murthy (aakashmurthy)",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "bcrypt": "^5.1.1",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "json2csv": "^6.0.0-alpha.2",
-    "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1",
-    "mysql2": "^3.10.0",
-    "node": "^20.14.0",
-    "redis": "^4.6.14",
-    "sequelize": "^6.37.3"
-  }
+    "name": "final-project-team-cr7",
+    "version": "1.0.0",
+    "description": "By Sonny Box (sonnybox) * John Tran (johnyu013) * Yen-Ting (Andy) Chou (practicalPro) * Aakash Murthy (aakashmurthy)",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "json2csv": "^6.0.0-alpha.2",
+        "jsonwebtoken": "^9.0.2",
+        "morgan": "^1.10.0",
+        "multer": "^1.4.5-lts.1",
+        "mysql2": "^3.10.0",
+        "node": "^20.14.0",
+        "redis": "^4.6.14",
+        "sequelize": "^6.37.3"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.4.0",
+        "eslint": "^9.4.0",
+        "globals": "^15.4.0",
+        "nodemon": "^3.1.3"
+    }
 }

@@ -5,23 +5,23 @@ const sequelize = require('../lib/sequelize');
 
 const User = sequelize.define('user', {
     name: {
-        type: DataTypes.String,
+        type: DataTypes.STRING,
         allowNull: false
     },
     email: {
-        type: DataTypes.String,
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true
     },
     password: {
-        type: DataTypes.String,
+        type: DataTypes.STRING,
         allowNull: false,
         set(value) {
             this.setDataValue('password', bcrypt.hashSync(value, 8))
         },
     },
     role: {
-        type: DataTypes.String,
+        type: DataTypes.STRING,
         defaultValue: 'student',
         isIn: [[
             'admin',

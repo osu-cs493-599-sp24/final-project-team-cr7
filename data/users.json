@@ -1,0 +1,50 @@
+[
+    {
+      "name": "Rob Hess",
+      "email": "hessro@oregonstate.edu",
+      "password": "hunter2",
+      "role": "instructor"
+    },
+    {
+      "name": "John Doe",
+      "email": "doej@oregonstate.edu",
+      "password": "hunter2",
+      "role": "student"
+    },
+    {
+      "name": "Joe Dough",
+      "email": "doughj@oregonstate.edu",
+      "password": "hunter2",
+      "role": "student"
+    },
+    {
+      "name": "William Wilson",
+      "email": "wilsonw@oregonstate.edu",
+      "password": "hunter2",
+      "role": "student"
+    },
+    {
+      "name": "Lewis Mccarthy",
+      "email": "lewism@oregonstate.edu",
+      "password": "hunter2",
+      "role": "student"
+    },
+    {
+      "name": "Joe Jackson",
+      "email": "jacksoj@oregonstate.edu",
+      "password": "hunter2",
+      "role": "instructor"
+    },
+    {
+      "name": "Frankie Armstrong",
+      "email": "armstrf@oregonstate.edu",
+      "password": "hunter2",
+      "role": "instructor"
+    },
+    {
+      "name": "Harvey Saunders",
+      "email": "saundeh@oregonstate.edu",
+      "password": "hunter2",
+      "role": "admin"
+    }
+]

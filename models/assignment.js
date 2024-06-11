@@ -15,7 +15,7 @@ const Assignment = sequelize.define('Assignment', {
         allowNull: false
     },
     due: {
-        type: DataTypes.STRING,
+        type: DataTypes.DATE,
         allowNull: false
     }
 

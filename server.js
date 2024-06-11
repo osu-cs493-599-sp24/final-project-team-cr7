@@ -7,7 +7,7 @@ const sequelize = require('./lib/sequelize')
 const { verifyAuthentication } = require('./lib/auth')
 
 const app = express()
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 8000
 
 // Redis rate limiting
 const redisHost = process.env.REDIS_HOST || "localhost"

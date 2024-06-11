@@ -1,7 +1,7 @@
 const { Router } = require('express')
 const { Course, CourseStudents } = require('../models/course')
-const { User, UserSchema} = require('../models/user')
-const { generateAuthToken, requireAuthentication, validateCredentials } = require('../lib/auth')
+const { User, UserSchema, validateCredentials} = require('../models/user')
+const { generateAuthToken, requireAuthentication } = require('../lib/auth')
 const router = Router()
 
 /*
@@ -15,11 +15,11 @@ const router = Router()
  * IDs of the Courses the User is enrolled in. Only an authenticated User whose
  * ID matches the ID of the requested User can fetch this information.
  */
-router.get('/userId', requireAuthentication, async function (req, res, next) {
+router.get('/:userId', requireAuthentication, async function (req, res, next) {
     try {
         const user = await User.findOne({ where: {email: req.user.email}  })
         const authenticated = await validateCredentials(user.id, req.user.password)
-        if (!authenticated || user.id != req.user.id) {
+        if (!authenticated || user.id != parseInt(req.params.userId)) {
             return res.status(403).send({
                 error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
             })
@@ -52,12 +52,9 @@ router.post('/', requireAuthentication, async function (req, res, next) {
                 error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
             })
         } 
-        
         if (user.role === 'admin') {
-            if (req.body.role === 'admin' || req.body.role === 'instructor') {
-                const newUser = await User.create(req.body, UserSchema)
-                return res.status(201).send({ id: newUser.id })
-            }
+            const newUser = await User.create(req.body, UserSchema)
+            return res.status(201).send({ id: newUser.id })
         } else if (user.role === 'instructor') {
             if (req.body.role === 'student') {
                 const newUser = await User.create(req.body, UserSchema)

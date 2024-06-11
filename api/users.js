@@ -17,7 +17,8 @@ const router = Router()
  */
 router.get('/:userId', requireAuthentication, async function (req, res, next) {
     try {
-        const user = await User.findOne({ where: {email: req.user.email}  })
+        const user = await User.findOne({ where: {email: req.user.email} })
+        if (!user) { return res.status(404).send({ error: "User not found" }) }
         const authenticated = await validateCredentials(user.id, req.user.password)
         if (!authenticated || user.id != parseInt(req.params.userId)) {
             return res.status(403).send({
@@ -27,7 +28,7 @@ router.get('/:userId', requireAuthentication, async function (req, res, next) {
             const courses = await Course.findAll({ where: {instructorId: user.id} })
             return res.status(200).send({user: user, courses: courses})
         } else if (user.role == 'student') {
-            const courses = await CourseStudents.findAll({ where: {studentIds: user.id} })
+            const courses = await CourseStudents.findAll({ where: {studentId: user.id} })
             return res.status(200).send({user: user, courses: courses})
         } else {
             return res.status(200).send({user: user})
@@ -46,6 +47,7 @@ router.get('/:userId', requireAuthentication, async function (req, res, next) {
 router.post('/', requireAuthentication, async function (req, res, next) {
     try {
         const user = await User.findOne({ where: { email: req.user.email } });
+        if (!user) { return res.status(404).send({ error: "User not found" }) }
         const authenticated = await validateCredentials(user.id, req.user.password);
         if (!authenticated || user.id !== req.user.id) {
             return res.status(403).send({
@@ -78,6 +80,7 @@ router.post('/', requireAuthentication, async function (req, res, next) {
 router.post('/login', async function (req, res, next) {
     try {
         const user = await User.findOne({ where: { email: req.body.email } })
+        if (!user) { return res.status(404).send({ error: "User not found" }) }
         const authenticated = await validateCredentials(user.id, req.body.password)
         if (!authenticated || user.email !== req.body.email) {
             return res.status(401).send({

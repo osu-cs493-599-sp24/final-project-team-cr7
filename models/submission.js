@@ -14,7 +14,7 @@ const Submission = sequelize.define('Submission', {
         allowNull: false
     },
     timestamp: {
-        type: DataTypes.STRING,
+        type: DataTypes.DATE,
         allowNull: false
     },
     grade: {

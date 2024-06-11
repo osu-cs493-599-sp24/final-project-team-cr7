@@ -1,7 +1,4 @@
 const { Router } = require('express')
-const { Business } = require('../models/business')
-const { Photo } = require('../models/photo')
-const { Review } = require('../models/review')
 const { Course, CourseStudents } = require('../models/course')
 const { User, UserSchema} = require('../models/user')
 const { generateAuthToken, requireAuthentication, validateCredentials } = require('../lib/auth')

@@ -33,13 +33,13 @@
       "name": "Joe Jackson",
       "email": "jacksoj@oregonstate.edu",
       "password": "hunter2",
-      "role": "student"
+      "role": "instructor"
     },
     {
       "name": "Frankie Armstrong",
       "email": "armstrf@oregonstate.edu",
       "password": "hunter2",
-      "role": "student"
+      "role": "instructor"
     },
     {
       "name": "Harvey Saunders",

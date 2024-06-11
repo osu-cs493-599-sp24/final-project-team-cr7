@@ -1,27 +1,40 @@
 const router = require('express').Router();
 
+const { Course, CourseSchema } = require('../models/course');
+
 // [INFO] '/' a.k.a the root path is actually '/courses'
 
+
+// [[TODO]] Add pagination here
 /*
  * Returns the list of all Courses. This list should be paginated. The Courses
  * returned should not contain the list of students in the Course or the list
  * of Assignments for the Course.
  */
-router.get('/', (req, res) => {
-    //const page = req.query.page || 0;
-    //const subjects = req.query.subjects || ''; // Course subjects, i.e. 'cs'
-    //const number = req.query.number || ''; // Course number, i.e. 493
-    //const term = req.query.term || ''; // Course term, i.e. sp22
-    res.send(200, {
-        courses: [
-            {
-                subject: 'CS',
-                number: '493',
-                title: 'Cloud Application Development',
-                term: 'sp22',
-                instructorId: 123,
-            },
-        ],
+router.get('/', async function (req, res, next) {
+    const page = parseInt(req.query.page) || 1;
+    const countPerPage = 10
+    const subject = req.query.subject || null; // Course subjects, i.e. 'cs'
+    const number = parseInt(req.query.number) || null; // Course number, i.e. 493
+    const term = req.query.term || null; // Course term, i.e. sp22
+
+    // Only populate filters if provided in query
+    filters = {}
+    if (subject) filters.subject = subject
+    if (number) filters.number = number
+    if (term) filters.term = term
+
+    const courses = await Course.findAndCountAll({
+        where: filters,
+        limit: countPerPage,
+        offset: (page - 1) * countPerPage,
+    });
+    
+    if (!courses.rows.length) {
+        return res.send(404, {error: "No courses found"})
+    }
+    res.status(200).send({
+        courses: courses.rows,
     });
 });
 

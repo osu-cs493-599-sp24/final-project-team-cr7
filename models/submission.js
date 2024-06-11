@@ -18,7 +18,7 @@ const Submission = sequelize.define('Submission', {
         allowNull: false
     },
     grade: {
-        type: DataTypes.DECIMAL,
+        type: DataTypes.DECIMAL(6, 3),
         allowNull: true
     },
     file: {

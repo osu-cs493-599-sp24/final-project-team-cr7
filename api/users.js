@@ -17,7 +17,10 @@ const router = Router()
  */
 router.get('/:userId', requireAuthentication, async function (req, res, next) {
     try {
-        const user = await User.findOne({ where: {email: req.user.email} })
+        const user = await User.findOne({ 
+            where: { email: req.user.email },
+            attributes: { exclude: ['password'] }
+        })
         if (!user) { return res.status(404).send({ error: "User not found" }) }
         const authenticated = await validateCredentials(user.id, req.user.password)
         if (!authenticated || user.id != parseInt(req.params.userId)) {
@@ -49,29 +52,33 @@ router.post('/', requireAuthentication, async function (req, res, next) {
         const user = await User.findOne({ where: { email: req.user.email } });
         if (!user) { return res.status(404).send({ error: "User not found" }) }
         const authenticated = await validateCredentials(user.id, req.user.password);
-        if (!authenticated || user.id !== req.user.id) {
+        if (!authenticated) {
             return res.status(403).send({
                 error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
-            })
-        } 
+            });
+        }
         if (user.role === 'admin') {
-            const newUser = await User.create(req.body, UserSchema)
-            return res.status(201).send({ id: newUser.id })
+            const newUser = await User.create(req.body, UserSchema);
+            return res.status(201).send({ id: newUser.id });
         } else if (user.role === 'instructor') {
             if (req.body.role === 'student') {
-                const newUser = await User.create(req.body, UserSchema)
-                return res.status(201).send({ id: newUser.id })
+                const newUser = await User.create(req.body, UserSchema);
+                return res.status(201).send({ id: newUser.id });
+            } else {
+                return res.status(403).send({
+                    error: "Only users with 'admin' role can create users with 'instructor' role."
+                });
             }
+        } else {
+            return res.status(403).send({
+                error: "The user does not have the necessary permissions to create users."
+            });
         }
-        
-        return res.status(403).send({
-            error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
-        })
-
     } catch (err) {
-        next(err)
+        next(err);
     }
-})
+});
+
 
 /*
  * Authenticate a specific User with their email address and password.

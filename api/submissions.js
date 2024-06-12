@@ -16,46 +16,35 @@ const {Assignment} = require('../models/assignment')
  */
 
 //only grading and change the student id of submission
-router.patch('/:id', requireAuthentication,async (req, res,next) => {
-    // [TODO) Implement this
-    try{
+router.patch('/:id', requireAuthentication,async (req, res, next) => {
+    try {
         const user = await User.findByPk(req.user)
         const assignment = await Assignment.findByPk(req.body.assignmentId)
         const course = await Course.findByPk(assignment.courseId)
-        if(user.role === 'admin' || user.id === course.instructorId)
-        {   
+        if (user.role === 'admin' || user.id === course.instructorId) {   
             const student = await User.findByPk(req.body.studentId)
-            if(student.role === 'student')
-                {
+            if (student.role === 'student') {
                     //only update the grade
                     const submission = await Submission.findByPk(req.params.id)
-                    if(submission)
-                        {
+                    if(submission) {
                             submission.grade = req.body.grade
                             submission.studentId = req.body.studentId
                             await submission.save()
                             //send the updated grade message
-                            res.send(200, {message: 'Grade updated'})
-                        }
-                        else{
-                            return res.status(404).send({error: 'Submission not found'})
-                        }
-                    
-                    
-                }
-                else{
-                    return res.status(403).send({error: 'ID is not a student ID'})
-                }
-            
-        }
-        else{
+                            return res.status(200).send({message: 'Grade updated'})
+                    } else{
+                        return res.status(404).send({error: 'Submission not found'})
+                    }    
+            } else {
+                return res.status(403).send({error: 'ID is not a student ID'})
+            }  
+        } else {
             return res.status(403).send({error: 'Not authorized to access the specified resource'})
         }
-    }catch(e)
-    {
+    } catch(e) {
         next(e)
     }
-});
+})
 
 /*
  * Download a Submission's associated file. Only an authenticated User with
@@ -63,7 +52,6 @@ router.patch('/:id', requireAuthentication,async (req, res,next) => {
  * instructorId of the associated course can update a Submission.
  */
 // router.get('/media/submissions/:filename', (req, res) => {
-//     // [TODO) Implement this
 //     res.send(200);
 // });
 

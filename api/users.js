@@ -34,8 +34,7 @@ router.get('/:id', requireAuthentication, async function (req, res, next) {
                 error: "The user does not have the necessary permissions to access the specified resource."
             })
         }
-        }
-    catch (err) {
+    } catch (err) {
         next(err)
     }
 })
@@ -49,26 +48,26 @@ router.post('/', requireAuthentication, async function (req, res, next) {
     try {
         const user = await User.findByPk(req.user)
         if (user.role === 'admin') {
-            const newUser = await User.create(req.body, UserSchema);
-            return res.status(201).send({ id: newUser.id });
+            const newUser = await User.create(req.body, UserSchema)
+            return res.status(201).send({ id: newUser.id })
         } else if (user.role === 'instructor') {
             if (req.body.role === 'student') {
-                const newUser = await User.create(req.body, UserSchema);
-                return res.status(201).send({ id: newUser.id });
+                const newUser = await User.create(req.body, UserSchema)
+                return res.status(201).send({ id: newUser.id })
             } else {
                 return res.status(403).send({
                     error: "Only users with 'admin' role can create users with 'instructor' role."
-                });
+                })
             }
         } else {
             return res.status(403).send({
                 error: "The user does not have the necessary permissions to create users."
-            });
+            })
         }
     } catch (err) {
-        next(err);
+        next(err)
     }
-});
+})
 
 /*
  * Authenticate a specific User with their email address and password.
@@ -76,14 +75,13 @@ router.post('/', requireAuthentication, async function (req, res, next) {
 router.post('/login', async function (req, res, next) {
     try {
         const user = await User.findOne({ where: { email: req.body.email } })
-        if (!user) { return res.status(404).send({ error: "The specified user does not exist." }) }
+        if (!user) { 
+            return res.status(400).send({ error: "The request body was either not present or did not contain all of the required fields." }) 
+        }
         const authenticated = await validateCredentials(user.id, req.body.password)
         if (!authenticated) {
-            return res.status(401).send({
-                error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
-            })
+            return res.status(401).send({ error: "The specified credentials were invalid." })
         }
-
         const token = generateAuthToken(user.id)
         return res.status(200).send({ token: token })
     } catch (err) {

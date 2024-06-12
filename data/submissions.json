@@ -4,47 +4,39 @@
       "studentId": 2,
       "timestamp": "04/13/2024 18:59:00",
       "grade": 100,
-      "file": ""
-    },
-    {
-      "assignmentId": 1,
-      "studentId": 3,
-      "timestamp": "04/15/2024 18:59:00",
-      "file": ""
+      "file": "",
+      "downloadlink": ""
     },
     {
       "assignmentId": 1,
       "studentId": 4,
       "timestamp": "04/16/2024 18:59:00",
       "grade": 60,
-      "file": ""
+      "file": "",
+      "downloadlink": ""
     },
     {
       "assignmentId": 1,
       "studentId": 5,
       "timestamp": "04/10/2024 18:59:00",
       "grade": 50.75,
-      "file": ""
-    },
-    {
-      "assignmentId": 2,
-      "studentId": 3,
-      "timestamp": "05/21/2024 23:59:00",
-      "grade": 90.5,
-      "file": ""
+      "file": "",
+      "downloadlink": ""
     },
     {
       "assignmentId": 3,
-      "studentId": 3,
+      "studentId": 5,
       "timestamp": "05/01/2024 14:59:00",
       "grade": 100,
-      "file": ""
+      "file": "",
+      "downloadlink": ""
     },
     {
       "assignmentId": 4,
-      "studentId": 3,
+      "studentId": 5,
       "timestamp": "06/13/2024 10:59:00",
       "grade": 75,
-      "file": ""
+      "file": "",
+      "downloadlink": ""
     }
 ]

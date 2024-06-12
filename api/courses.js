@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { parse } = require('json2csv');
 
 const { Course, CourseSchema, CourseStudents } = require('../models/course');
 const { User } = require('../models/user');
@@ -237,7 +238,20 @@ router.get('/:id/roster', async (req, res, next) => {
             return res.status(403).send({error: "User does not have permission to delete course"});
         }
 
+        const result = await CourseStudents.findAll({ where: { courseId: courseId } });
+        // Iterate thru each student in the course and get their info
+        const studentList = [];
+        for await (student of result) {
+            const studentResult = await User.findByPk(student.studentId);
+            const studentValues = studentResult.dataValues;
+            delete studentValues.password;
+            studentList.push(studentValues);
+        }
+        
+        const fields = ['id', 'name', 'email'];
+        const csv = parse(studentList, {fields});
 
+        res.type('text/csv').send(csv);
     } catch (err) {
         next(err)
     }

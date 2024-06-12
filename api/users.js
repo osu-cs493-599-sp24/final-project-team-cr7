@@ -29,8 +29,6 @@ router.get('/:id', requireAuthentication, async function (req, res, next) {
         } else if (user.role == 'student') {
             const courses = await CourseStudents.findAll({ where: {studentId: user.id} })
             return res.status(200).send({user: user, courses: courses})
-        } else if (user.role == 'admin') {
-            return res.status(200).send({user: user})
         } else {
             return res.status(403).send({
                 error: "The user does not have the necessary permissions to access the specified resource."
@@ -47,7 +45,6 @@ router.get('/:id', requireAuthentication, async function (req, res, next) {
  * application's database. Only an authenticated User with 'admin' role can create
  * users with the 'admin' or 'instructor' roles.
  */
-
 router.post('/', requireAuthentication, async function (req, res, next) {
     try {
         const user = await User.findByPk(req.user)
@@ -73,14 +70,13 @@ router.post('/', requireAuthentication, async function (req, res, next) {
     }
 });
 
-
 /*
  * Authenticate a specific User with their email address and password.
  */
-
 router.post('/login', async function (req, res, next) {
     try {
         const user = await User.findOne({ where: { email: req.body.email } })
+        if (!user) { return res.status(404).send({ error: "The specified user does not exist." }) }
         const authenticated = await validateCredentials(user.id, req.body.password)
         if (!authenticated) {
             return res.status(401).send({

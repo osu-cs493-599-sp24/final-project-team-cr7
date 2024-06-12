@@ -21,14 +21,15 @@ const User = sequelize.define('Users', {
         },
     },
     role: {
-        type: DataTypes.STRING,
-        defaultValue: 'student',
-        isIn: [[
-            'admin',
-            'instructor',
-            'student',
-        ]]
-    },
+      type: DataTypes.STRING,
+      defaultValue: 'student',
+      validate: {
+          isIn: {
+              args: [['admin', 'instructor', 'student']],
+              msg: 'Role must be either "admin", "instructor", or "student"',
+          },
+      },
+  },
 })
 
 exports.User = User

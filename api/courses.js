@@ -120,9 +120,25 @@ router.patch('/:id', requireAuthentication, async function (req, res, next) {
  * students, all Assignments, etc. Only an authenticated User with 'admin' role
  * can remove a Course.
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAuthentication, async function (req, res, next) {
     const courseId = parseInt(req.params.id);
-    res.send(204);
+    try {
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to delete course"});
+        }
+
+        const result = await Course.destroy({ where: { id: courseId } });
+
+        if (result > 0) {
+            return res.status(204).send();
+        } else {
+            next()
+        }
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*

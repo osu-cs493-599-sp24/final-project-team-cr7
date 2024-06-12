@@ -4,7 +4,6 @@ const { parse } = require('json2csv');
 const { Course, CourseSchema, CourseStudents } = require('../models/course');
 const { User } = require('../models/user');
 const { Assignment } = require('../models/assignment');
-const { Submission } = require('../models/submission');
 const { requireAuthentication } = require('../lib/auth');
 const { validateAgainstSchema, extractValidFields } = require('../lib/validation');
 

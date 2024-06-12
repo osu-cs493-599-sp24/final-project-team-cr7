@@ -1,7 +1,9 @@
 const router = require('express').Router();
 
-const { Course, CourseSchema } = require('../models/course');
+const { Course, CourseSchema, CourseStudents } = require('../models/course');
 const { User } = require('../models/user');
+const { Assignment } = require('../models/assignment');
+const { Submission } = require('../models/submission');
 const { requireAuthentication } = require('../lib/auth');
 const { validateAgainstSchema, extractValidFields } = require('../lib/validation');
 
@@ -147,12 +149,23 @@ router.delete('/:id', requireAuthentication, async function (req, res, next) {
  * 'instructor' User whose ID matches the instructorId of the Course can fetch
  * the list of enrolled students.
  */
-router.get('/:id/students', (req, res) => {
+router.get('/:id/students', async (req, res, next) => {
     // [TODO) Implement this
-    //const courseId = req.params.id;
-    res.send(200, {
-        students: [123, 456],
-    });
+    const courseId = parseInt(req.params.id);
+    try {
+        const user = await User.findByPk(req.user);
+        const course = await Course.findByPk(courseId);
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to view students"});
+        }
+
+        const result = await CourseStudents.findAll({ where: { courseId: courseId } });
+
+        console.log(result)
+        return res.status(200)
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -162,7 +175,7 @@ router.get('/:id/students', (req, res) => {
  */
 router.post('/:id/students', (req, res) => {
     // [TODO) Implement this
-    //const courseId = req.params.id;
+    const courseId = parseInt(req.params.id);
     const studentId = req.body.studentId;
     res.send(201, {
         studentId: studentId,

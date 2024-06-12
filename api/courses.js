@@ -268,8 +268,12 @@ router.get('/:id/assignments', async (req, res, next) => {
         if (user.role !== 'admin' && req.user !== course.instructorId) {
             return res.status(403).send({error: "User does not have permission to delete course"});
         }
-
         
+        const result = await Assignment.findAll({ where: { courseId: courseId } });
+        
+        return res.status(200).send({
+            assignments: result,
+        });
     } catch (err) {
         next(err)
     }

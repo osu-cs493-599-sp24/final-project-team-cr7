@@ -1,10 +1,16 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require("../lib/sequelize.js")
+const { Course } = require('./course')
+
 
 const Assignment = sequelize.define('Assignment', {
     courseId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: Course,
+            key: 'id'
+        }
     },
     title: {
         type: DataTypes.STRING,
@@ -20,7 +26,13 @@ const Assignment = sequelize.define('Assignment', {
     }
 
 })
+Assignment.belongsTo(Course, {foreignKey: 'courseId'})
+Course.hasMany(Assignment, { foreignKey: 'courseId'})
+
+
 exports.Assignment = Assignment
+
+
 
 const AssignmentSchema = {
     courseId: { required: true },

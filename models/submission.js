@@ -7,7 +7,11 @@ const { Assignment } = require('./assignment')
 const Submission = sequelize.define('Submission', {
     studentId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'id'
+        }
     },
     timestamp: {
         type: DataTypes.DATE,
@@ -20,14 +24,26 @@ const Submission = sequelize.define('Submission', {
     file: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    downloadlink: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    assignmentId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Assignment,
+            key: 'id'
+        }
     }
 
 })
 
-Submission.belongsTo(Assignment,{sourceKey: 'assignmentId'})
+Submission.belongsTo(Assignment, {foreignKey: 'assignmentId'})
 Assignment.hasMany(Submission, { foreignKey: 'assignmentId'})
 
-Submission.belongsTo(User, {sourceKey: 'studentId' })
+Submission.belongsTo(User, {foreignKey: 'studentId' })
 User.hasMany(Submission, { foreignKey: 'studentId'})
 
 exports.Submission = Submission

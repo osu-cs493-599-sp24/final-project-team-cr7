@@ -28,8 +28,8 @@ const Submission = sequelize.define('Submission', {
 
 })
 
-Submission.belongsTo(Assignment)
-Assignment.hasMany(Submission)
+Submission.belongsTo(Assignment,{sourceKey: 'assignmentId'})
+Assignment.hasMany(Submission, { foreignKey: 'assignmentId'})
 
 Submission.belongsTo(User, {sourceKey: 'studentId' })
 User.hasMany(Submission, { foreignKey: 'studentId'})

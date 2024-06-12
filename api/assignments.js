@@ -1,6 +1,16 @@
 const router = require('express').Router();
+const {Assignment} = require('../models/assignment')
+const {verifyAuthentication} = require('../lib/auth')
+const {Submission} = require('../models/submission')
 
 // [INFO] '/' a.k.a the root path is actually '/assignments'
+
+//test check all assignments
+router.get('/', async function (req, res){
+    // [TODO) Implement this
+    const assignments = await Assignment.findAll()
+    res.send(200, assignments)
+});
 
 /*
  * Create and store a new Assignment with specified data and adds it to the
@@ -8,27 +18,23 @@ const router = require('express').Router();
  * authenticated 'instructor' User whose ID matches the instructorId of the Course
  * corresponding to the Assignment's courseId can create an Assignment.
  */
-router.post('/', (req, res) => {
+router.post('/',async function (req, res){
     // [TODO) Implement this
+    const assignment = await Assignment.create(req.body)
+
     res.send(201, {
-        courseId: 123,
-        title: 'Assignment 3',
-        points: 100,
-        due: '2022-06-14T17:00:00-07:00',
+        id: assignment.id
     });
 });
 
 /*
  * Returns summary data about the Assignment, excluding the list of Submissions.
  */
-router.get('/:id', (req, res) => {
+router.get('/:id', async function(req, res){
     // [TODO) Implement this
-    res.send(200, {
-        courseId: 123,
-        title: 'Assignment 3',
-        points: 100,
-        due: '2022-06-14T17:00:00-07:00',
-    });
+    const assignment = await Assignment.findByPk(req.params.id)
+    res.send(200, assignment)
+    
 });
 
 /*
@@ -38,13 +44,13 @@ router.get('/:id', (req, res) => {
  * the Course corresponding to the Assignment's courseId can update an
  * Assignment.
  */
-router.patch('/:id', (req, res) => {
+router.patch('/:id', async (req, res) => {
     // [TODO) Implement this
+    const assignment = await Assignment.findByPk(req.params.id)
+    assignment.update(req.body)
+    //res send the updated message 
     res.send(200, {
-        courseId: 123,
-        title: 'Assignment 3',
-        points: 100,
-        due: '2022-06-14T17:00:00-07:00',
+        message: 'Assignment updated successfully'
     });
 });
 
@@ -54,9 +60,16 @@ router.patch('/:id', (req, res) => {
  * 'instructor' User whose ID matches the instructorId of the Course corresponding
  * to the Assignment's courseId can delete an Assignment.
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
     // [TODO) Implement this
-    res.send(204);
+    const result = await Assignment.destroy({where: {id: req.params.id}})
+    if (result > 0) {
+        res.status(204).send()
+      } else {
+        next()
+      }
+    
+
 });
 
 /*
@@ -65,19 +78,20 @@ router.delete('/:id', (req, res) => {
  * 'instructor' User whose ID matches the instructorId of the Course corresponding
  * to the Assignment's courseId can fetch the Submissions for an Assignment.
  */
-router.get('/:id/submissions', (req, res) => {
+router.get('/:id/submissions', async (req, res,next) => {
     // [TODO) Implement this
-    res.send(200, {
-        submissions: [
-            {
-                assignmentId: 123,
-                studentId: 123,
-                timestamp: '2022-06-14T17:00:00-07:00',
-                grade: 94.5,
-                file: 'string',
-            },
-        ],
-    });
+    
+    try
+    {
+        const assignment = await Assignment.findByPk(req.params.id)
+        const submissions = await Submission.findAll({where: {assignmentId: assignment.id}})
+        res.send(200, submissions)
+
+    }
+    catch(e)
+    {
+        next(e)
+    }
 });
 
 /*

@@ -158,7 +158,6 @@ router.delete('/:id', requireAuthentication, async function (req, res, next) {
  * the list of enrolled students.
  */
 router.get('/:id/students', async (req, res, next) => {
-    // [TODO) Implement this
     const courseId = parseInt(req.params.id);
     try {
         const user = await User.findByPk(req.user);
@@ -168,9 +167,18 @@ router.get('/:id/students', async (req, res, next) => {
         }
 
         const result = await CourseStudents.findAll({ where: { courseId: courseId } });
-
-        console.log(result)
-        return res.status(200)
+        // Iterate thru each student in the course and get their info
+        const studentList = [];
+        for await (student of result) {
+            const studentResult = await User.findByPk(student.studentId);
+            const studentValues = studentResult.dataValues;
+            delete studentValues.password;
+            studentList.push(studentValues);
+        }
+        
+        return res.status(200).send({
+            students: studentList,
+        });
     } catch (err) {
         next(err)
     }

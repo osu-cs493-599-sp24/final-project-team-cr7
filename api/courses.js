@@ -56,7 +56,7 @@ router.get('/', async function (req, res, next) {
  * database. Only an authenticated User with 'admin' role can create a new Course.
  */
 router.post('/', requireAuthentication, async function (req, res, next) {
-    const user = await User.findOne({ where: { id: req.user } });
+    const user = await User.findByPk(req.user);
     if (user.role !== 'admin') {
         return res.status(403).send({error: "User does not have permission to create a course"});
     }
@@ -80,6 +80,7 @@ router.get('/:id', async function (req, res, next) {
     const courseId = parseInt(req.params.id);
     try {
         const course = await Course.findByPk(courseId);
+        
         if (!course) {
             next()
         }
@@ -167,7 +168,7 @@ router.delete('/:id', requireAuthentication, async function (req, res, next) {
  * 'instructor' User whose ID matches the instructorId of the Course can fetch
  * the list of enrolled students.
  */
-router.get('/:id/students', async (req, res, next) => {
+router.get('/:id/students', requireAuthentication, async (req, res, next) => {
     const courseId = parseInt(req.params.id);
     try {
         const user = await User.findByPk(req.user);
@@ -204,7 +205,7 @@ router.get('/:id/students', async (req, res, next) => {
  * with 'admin' role or an authenticated 'instructor' User whose ID matches the
  * instructorId of the Course can update the students enrolled in the Course.
  */
-router.post('/:id/students', async (req, res, next) => {
+router.post('/:id/students', requireAuthentication, async (req, res, next) => {
     const courseId = parseInt(req.params.id);
     const add = req.body.add;
     const remove = req.body.remove;
@@ -248,7 +249,7 @@ router.post('/:id/students', async (req, res, next) => {
  * authenticated User with 'admin' role or an authenticated 'instructor' User
  * whose ID matches the instructorId of the Course can fetch the course roster.
  */
-router.get('/:id/roster', async (req, res, next) => {
+router.get('/:id/roster', requireAuthentication, async (req, res, next) => {
     const courseId = parseInt(req.params.id);
     try {
         const user = await User.findByPk(req.user)
@@ -287,15 +288,10 @@ router.get('/:id/roster', async (req, res, next) => {
 router.get('/:id/assignments', async (req, res, next) => {
     const courseId = parseInt(req.params.id);
     try {
-        const user = await User.findByPk(req.user)
         const course = await Course.findByPk(courseId);
         
         if (!course) {
             next()
-        }
-
-        if (user.role !== 'admin' && req.user !== course.instructorId) {
-            return res.status(403).send({error: "User does not have permission to delete course"});
         }
         
         const result = await Assignment.findAll({ where: { courseId: courseId } });

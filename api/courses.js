@@ -175,7 +175,7 @@ router.get('/:id/students', async (req, res, next) => {
             delete studentValues.password;
             studentList.push(studentValues);
         }
-        
+
         return res.status(200).send({
             students: studentList,
         });
@@ -189,13 +189,37 @@ router.get('/:id/students', async (req, res, next) => {
  * with 'admin' role or an authenticated 'instructor' User whose ID matches the
  * instructorId of the Course can update the students enrolled in the Course.
  */
-router.post('/:id/students', (req, res) => {
+router.post('/:id/students', async (req, res, next) => {
     // [TODO) Implement this
     const courseId = parseInt(req.params.id);
-    const studentId = req.body.studentId;
-    res.send(201, {
-        studentId: studentId,
-    });
+    const add = req.body.add;
+    const remove = req.body.remove;
+    try {
+        const user = await User.findByPk(req.user);
+        const course = await Course.findByPk(courseId);
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to update students"});
+        }
+
+        for await (stu of add) {
+            const result = await CourseStudents.create({
+                courseId: courseId,
+                studentId: stu,
+            })
+        }
+
+        for await (stu of remove) {
+            const result = await CourseStudents.destroy({
+                where: {
+                    courseId: courseId,
+                    studentId: stu,
+                },
+            })
+        }
+        return res.status(200).send()
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*

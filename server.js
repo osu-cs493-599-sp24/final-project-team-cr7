@@ -98,5 +98,5 @@ sequelize
     })
     .then(() => {
         console.log('== Initializing database');
-        require('./initDb');
+        // require('./initDb');
     });

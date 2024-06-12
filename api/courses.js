@@ -1,4 +1,11 @@
 const router = require('express').Router();
+const { parse } = require('json2csv');
+
+const { Course, CourseSchema, CourseStudents } = require('../models/course');
+const { User } = require('../models/user');
+const { Assignment } = require('../models/assignment');
+const { requireAuthentication } = require('../lib/auth');
+const { validateAgainstSchema, extractValidFields } = require('../lib/validation');
 
 // [INFO] '/' a.k.a the root path is actually '/courses'
 
@@ -7,41 +14,61 @@ const router = require('express').Router();
  * returned should not contain the list of students in the Course or the list
  * of Assignments for the Course.
  */
-router.get('/', (req, res) => {
-    //const page = req.query.page || 0;
-    //const subjects = req.query.subjects || ''; // Course subjects, i.e. 'cs'
-    //const number = req.query.number || ''; // Course number, i.e. 493
-    //const term = req.query.term || ''; // Course term, i.e. sp22
-    res.send(200, {
-        courses: [
-            {
-                subject: 'CS',
-                number: '493',
-                title: 'Cloud Application Development',
-                term: 'sp22',
-                instructorId: 123,
-            },
-        ],
-    });
-});
+router.get('/', async function (req, res, next) {
+    try {
+        const page = parseInt(req.query.page) || 1
+        const countPerPage = 10
+        const subject = req.query.subject || null // Course subjects, i.e. 'cs'
+        const number = parseInt(req.query.number) || null; // Course number, i.e. 493
+        const term = req.query.term || null // Course term, i.e. sp22
+
+        // Only populate filters if provided in query
+        filters = {}
+        if (subject) filters.subject = subject
+        if (number) filters.number = number
+        if (term) filters.term = term
+
+        const courses = await Course.findAndCountAll({
+            where: filters,
+            limit: countPerPage,
+            offset: (page - 1) * countPerPage,
+        })
+        
+        const totalPages = Math.ceil(courses.count / countPerPage);
+
+        if (!courses.rows.length) {
+            return res.status(404).send({ error: "No courses found" });
+        }
+        
+        res.status(200).send({
+            courses: courses.rows,
+            page: page,
+            totalPages: totalPages,
+            totalCourses: courses.count,
+        })
+    } catch (err) {
+        next(err)
+    }
+})
 
 /*
  * Creates a new Course with specified data and adds it to the application's
  * database. Only an authenticated User with 'admin' role can create a new Course.
  */
-router.post('/', (req, res) => {
-    // [TODO) Implement this
-    const subject = req.body.subject;
-    const number = req.body.number;
-    const title = req.body.title;
-    const term = req.body.term;
-    const instructorId = req.body.instructorId;
-    res.send(201, {
-        subject: subject,
-        number: number,
-        title: title,
-        term: term,
-        instructorId: instructorId,
+router.post('/', requireAuthentication, async function (req, res, next) {
+    const user = await User.findOne({ where: { id: req.user } });
+    if (user.role !== 'admin') {
+        return res.status(403).send({error: "User does not have permission to create a course"});
+    }
+
+    if (!validateAgainstSchema(req.body, CourseSchema)) {
+        return res.status(400).send({error: "Request body is not a valid course object"});
+    }
+
+    const course = extractValidFields(req.body, CourseSchema);
+    const newCourse = await Course.create(course);
+    res.status(201).send({
+        id: newCourse.id,
     });
 });
 
@@ -49,15 +76,18 @@ router.post('/', (req, res) => {
  * Returns summary data about the Course, excluding the list of students enrolled
  * in the course and the list of Assignments for the course.
  */
-router.get('/:id', (req, res) => {
-    // const courseId = req.params.id;
-    res.send(200, {
-        subject: 'CS',
-        number: '493',
-        title: 'Cloud Application Development',
-        term: 'sp22',
-        instructorId: 123,
-    });
+router.get('/:id', async function (req, res, next) {
+    const courseId = parseInt(req.params.id);
+    try {
+        const course = await Course.findByPk(courseId);
+        if (!course) {
+            next()
+        }
+
+        return res.status(200).send(course);
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -66,21 +96,38 @@ router.get('/:id', (req, res) => {
  * authenticated User with 'admin' role or an authenticated 'instructor' User
  * whose ID matches the instructorId of the Course can update Course information.
  */
-router.patch('/:id', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    const subject = req.body.subject;
-    const number = req.body.number;
-    const title = req.body.title;
-    const term = req.body.term;
-    const instructorId = req.body.instructorId;
-    res.send(200, {
-        subject: subject,
-        number: number,
-        title: title,
-        term: term,
-        instructorId: instructorId,
-    });
+router.patch('/:id', requireAuthentication, async function (req, res, next) {
+    const courseId = parseInt(req.params.id);
+    try {
+        if (!validateAgainstSchema(req.body, CourseSchema)) {
+            return res.status(400).send({error: "Request body is not a valid course object"});
+        }
+
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+        
+        if (!course) {
+            next()
+        }
+        
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to update course"});
+        }
+
+        const userCourse = extractValidFields(req.body, CourseSchema);
+        const result = await Course.update(userCourse, {
+            where: { id: courseId },
+            fields: CourseSchema.keys,
+        });
+
+        if (result[0] > 0) {
+            return res.status(200).send();
+        } else {
+            next()
+        }
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -88,10 +135,30 @@ router.patch('/:id', (req, res) => {
  * students, all Assignments, etc. Only an authenticated User with 'admin' role
  * can remove a Course.
  */
-router.delete('/:id', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    res.send(204);
+router.delete('/:id', requireAuthentication, async function (req, res, next) {
+    const courseId = parseInt(req.params.id);
+    try {
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+        
+        if (!course) {
+            next()
+        }
+
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to delete course"});
+        }
+
+        const result = await Course.destroy({ where: { id: courseId } });
+
+        if (result > 0) {
+            return res.status(204).send();
+        } else {
+            next()
+        }
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -100,12 +167,36 @@ router.delete('/:id', (req, res) => {
  * 'instructor' User whose ID matches the instructorId of the Course can fetch
  * the list of enrolled students.
  */
-router.get('/:id/students', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    res.send(200, {
-        students: [123, 456],
-    });
+router.get('/:id/students', async (req, res, next) => {
+    const courseId = parseInt(req.params.id);
+    try {
+        const user = await User.findByPk(req.user);
+        const course = await Course.findByPk(courseId);
+
+        if (!course) {
+            next()
+        }
+        
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to view students"});
+        }
+
+        const result = await CourseStudents.findAll({ where: { courseId: courseId } });
+        // Iterate thru each student in the course and get their info
+        const studentList = [];
+        for await (student of result) {
+            const studentResult = await User.findByPk(student.studentId);
+            const studentValues = studentResult.dataValues;
+            delete studentValues.password;
+            studentList.push(studentValues);
+        }
+
+        return res.status(200).send({
+            students: studentList,
+        });
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -113,13 +204,42 @@ router.get('/:id/students', (req, res) => {
  * with 'admin' role or an authenticated 'instructor' User whose ID matches the
  * instructorId of the Course can update the students enrolled in the Course.
  */
-router.post('/:id/students', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    const studentId = req.body.studentId;
-    res.send(201, {
-        studentId: studentId,
-    });
+router.post('/:id/students', async (req, res, next) => {
+    const courseId = parseInt(req.params.id);
+    const add = req.body.add;
+    const remove = req.body.remove;
+    try {
+        const user = await User.findByPk(req.user);
+        const course = await Course.findByPk(courseId);
+
+        if (!course) {
+            next()
+        }
+
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to update students"});
+        }
+
+        for await (stu of add) {
+            const result = await CourseStudents.create({
+                courseId: courseId,
+                studentId: stu,
+            })
+        }
+
+        for await (stu of remove) {
+            const result = await CourseStudents.destroy({
+                where: {
+                    courseId: courseId,
+                    studentId: stu,
+                },
+            })
+        }
+
+        return res.status(200).send()
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -128,70 +248,64 @@ router.post('/:id/students', (req, res) => {
  * authenticated User with 'admin' role or an authenticated 'instructor' User
  * whose ID matches the instructorId of the Course can fetch the course roster.
  */
-router.get('/:id/roster', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    res.send(200, {
-        message: 'CSV file',
-    });
+router.get('/:id/roster', async (req, res, next) => {
+    const courseId = parseInt(req.params.id);
+    try {
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+                
+        if (!course) {
+            next()
+        }
+
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to delete course"});
+        }
+
+        const result = await CourseStudents.findAll({ where: { courseId: courseId } });
+        // Iterate thru each student in the course and get their info
+        const studentList = [];
+        for await (student of result) {
+            const studentResult = await User.findByPk(student.studentId);
+            const studentValues = studentResult.dataValues;
+            delete studentValues.password;
+            studentList.push(studentValues);
+        }
+        
+        const fields = ['id', 'name', 'email'];
+        const csv = parse(studentList, {fields});
+
+        res.type('text/csv').send(csv);
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
  * Returns a list containing the Assignment IDs of all Assignments for the Course.
  */
-router.get('/:id/assignments', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    res.send(200, {
-        assignments: [
-            {
-                courseId: 123,
-                title: 'Assignment 3',
-                points: 100,
-                due: '2022-06-14T17:00:00-07:00',
-            },
-        ],
-    });
+router.get('/:id/assignments', async (req, res, next) => {
+    const courseId = parseInt(req.params.id);
+    try {
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+        
+        if (!course) {
+            next()
+        }
+
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to delete course"});
+        }
+        
+        const result = await Assignment.findAll({ where: { courseId: courseId } });
+        
+        return res.status(200).send({
+            assignments: result,
+        });
+    } catch (err) {
+        next(err)
+    }
 });
 
-//const { Router } = require('express');
-//const { ValidationError } = require('sequelize');
-//const { Course, CourseClientFields } = require('../model/course');
-//const router = Router();
-
-/*router.get('/courses', async (req, res, next) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10; // Define the number of courses per page
-    const offset = (page - 1) * limit;
-
-    const filters = {};
-    if (req.query.subject) {
-      filters.subject = req.query.subject;
-    }
-    if (req.query.number) {
-      filters.number = req.query.number;
-    }
-    if (req.query.term) {
-      filters.term = req.query.term;
-    }
-
-    const courses = await Course.findAndCountAll({
-      where: filters,
-      limit,
-      offset,
-      attributes: { exclude: ['createdAt', 'updatedAt', 'students', 'assignments'] } // Exclude students and assignments
-    });
-
-    res.status(200).json({
-      courses: courses.rows,
-      totalPages: Math.ceil(courses.count / limit),
-      currentPage: page
-    });
-  } catch (err) {
-    console.error(err);
-    next(err); // Pass the error to the next middleware
-  }
-});
-*/
 module.exports = router;

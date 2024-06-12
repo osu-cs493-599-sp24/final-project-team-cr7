@@ -5,20 +5,16 @@ const { User } = require('./user')
 const { Assignment } = require('./assignment')
 
 const Submission = sequelize.define('Submission', {
-    assignmentId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
     studentId: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
     timestamp: {
-        type: DataTypes.STRING,
+        type: DataTypes.DATE,
         allowNull: false
     },
     grade: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.DECIMAL(6, 3),
         allowNull: true
     },
     file: {

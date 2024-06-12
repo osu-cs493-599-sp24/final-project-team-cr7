@@ -1,3 +1,4 @@
+** Start MySQL server with Docker **
 docker run -d --name mysql-server			\
 	--network mysql-net					\
 	-p "3306:3306"						\
@@ -7,7 +8,12 @@ docker run -d --name mysql-server			\
 	-e "MYSQL_PASSWORD=hunter2" 			\
 	mysql
 
+** Docker MySQL CLI **
 docker run --rm -it		\
 	--network mysql-net	\
 	mysql			\
 		mysql -h mysql-server -u tarpaulin -p
+
+
+** Start Redis server with Docker **
+docker run -d --name redis-server -p 6379:6379 redis:latest

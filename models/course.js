@@ -25,12 +25,23 @@ const Course = sequelize.define('Course', {
         allowNull: false
     }
 })
-
-// Setup relationship between Course and User for instructorID
-Course.belongsTo(User, { foreignKey: 'instructorId' })
-User.hasMany(Course, { foreignKey: 'instructorId'})
-
 exports.Course = Course
+
+const CourseStudents = sequelize.define('CourseStudents', {
+    courseId: {
+        type: DataTypes.INTEGER,
+        primaryKey: true
+    },
+    studentId: {
+        type: DataTypes.INTEGER,
+        primaryKey: true
+    }
+})
+exports.CourseStudents = CourseStudents
+
+// Setup relationship between Course and User for studentID
+Course.belongsToMany(User, { through: CourseStudents, foreignKey: 'courseId' });
+User.belongsToMany(Course, { through: CourseStudents, foreignKey: 'studentId' });
 
 const CourseSchema = {
     subject: { required: true },

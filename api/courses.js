@@ -56,7 +56,7 @@ router.get('/', async function (req, res, next) {
  * database. Only an authenticated User with 'admin' role can create a new Course.
  */
 router.post('/', requireAuthentication, async function (req, res, next) {
-    const user = await User.findOne({ where: { id: req.user } });
+    const user = await User.findByPk(req.user);
     if (user.role !== 'admin') {
         return res.status(403).send({error: "User does not have permission to create a course"});
     }
@@ -80,6 +80,7 @@ router.get('/:id', async function (req, res, next) {
     const courseId = parseInt(req.params.id);
     try {
         const course = await Course.findByPk(courseId);
+        
         if (!course) {
             next()
         }

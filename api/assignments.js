@@ -187,7 +187,7 @@ router.post('/:id/submissions', requireAuthentication , upload.single('file'), a
                 const sub = await Submission.create({
                     ...req.body,
                     file: req.file.filename,
-                    downloadlink: `submissions/media/uploads/${req.file.filename}`,
+                    downloadlink: `/media/uploads/${req.file.filename}`,
                     assignmentId: req.params.id
                 })
                 return res.status(201).send({id: sub.id})

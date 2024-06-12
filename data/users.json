@@ -1,21 +1,21 @@
 [
     {
       "name": "Rob Hess",
-      "email": "hessro@oregonstate.edu",
+      "email": "rob@edu",
       "password": "hunter2",
       "role": "instructor"
     },
     {
       "name": "John Doe",
-      "email": "doej@oregonstate.edu",
+      "email": "doe@edu",
       "password": "hunter2",
       "role": "student"
     },
     {
       "name": "Joe Dough",
-      "email": "doughj@oregonstate.edu",
+      "email": "joe@edu",
       "password": "hunter2",
-      "role": "instructor"
+      "role": "admin"
     },
     {
       "name": "William Wilson",

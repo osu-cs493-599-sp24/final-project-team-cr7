@@ -190,7 +190,6 @@ router.get('/:id/students', async (req, res, next) => {
  * instructorId of the Course can update the students enrolled in the Course.
  */
 router.post('/:id/students', async (req, res, next) => {
-    // [TODO) Implement this
     const courseId = parseInt(req.params.id);
     const add = req.body.add;
     const remove = req.body.remove;
@@ -216,6 +215,7 @@ router.post('/:id/students', async (req, res, next) => {
                 },
             })
         }
+
         return res.status(200).send()
     } catch (err) {
         next(err)
@@ -228,30 +228,37 @@ router.post('/:id/students', async (req, res, next) => {
  * authenticated User with 'admin' role or an authenticated 'instructor' User
  * whose ID matches the instructorId of the Course can fetch the course roster.
  */
-router.get('/:id/roster', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    res.send(200, {
-        message: 'CSV file',
-    });
+router.get('/:id/roster', async (req, res, next) => {
+    const courseId = parseInt(req.params.id);
+    try {
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to delete course"});
+        }
+
+
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
  * Returns a list containing the Assignment IDs of all Assignments for the Course.
  */
-router.get('/:id/assignments', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    res.send(200, {
-        assignments: [
-            {
-                courseId: 123,
-                title: 'Assignment 3',
-                points: 100,
-                due: '2022-06-14T17:00:00-07:00',
-            },
-        ],
-    });
+router.get('/:id/assignments', async (req, res, next) => {
+    const courseId = parseInt(req.params.id);
+    try {
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to delete course"});
+        }
+
+        
+    } catch (err) {
+        next(err)
+    }
 });
 
 module.exports = router;

@@ -172,27 +172,23 @@ router.get('/:id/submissions', requireAuthentication,async (req, res, next) => {
         
         const offset = (page - 1) * limit
 
-        const submissions = await Submission.findAndCountAll({
-            where: { assignmentId: assignment.id
-             },
-            limit,
-            offset
-        })
+            const submissions = await Submission.findAndCountAll({
+                where: { assignmentId: req.params.id },
+                limit,
+                offset
+            });
 
-        const totalPages = Math.ceil(submissions.count / limit)
-
-        res.send(200, {
-            submissions: submissions.rows,
-            currentPage: page,
-            totalPages
-        })
-            }
-            else{
-                return res.status(403).send({error: 'Not authorized to access the specified resource'})
-            }
-
-        
-
+            const totalPages = Math.ceil(submissions.count / limit);
+            console.log(submissions.rows)
+            res.status(200).send({
+                submissions: submissions.rows,
+                currentPage: page,
+                totalPages,
+                totalSubmissions: submissions.count
+            });
+        } else {
+            return res.status(403).send({ error: 'Not authorized to access the specified resource' });
+        }
     } catch (e) {
         next(e)
     }

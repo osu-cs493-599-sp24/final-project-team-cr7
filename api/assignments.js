@@ -1,6 +1,38 @@
 const router = require('express').Router();
+const {Assignment} = require('../models/assignment')
+const {requireAuthentication} = require('../lib/auth')
+const {Submission} = require('../models/submission')
+const {User} = require('../models/user')
+const {Course} = require('../models/course')
+
+const {upload} = require('../lib/upload')
 
 // [INFO] '/' a.k.a the root path is actually '/assignments'
+
+//test check all assignments
+router.get('/', requireAuthentication,async function (req, res){
+    // [TODO) Implement this
+    const user = await User.findByPk(req.user)
+    //allow student to see all assignments
+    try{
+        if(user.role === 'student')
+            {
+                const assignments = await Assignment.findAll()
+                res.send(200, assignments)
+            }
+            else{
+                return res.status(403).send({error: 'Not authorized to access the specified resource'})
+                
+            }
+    }catch(e)
+    {
+        next(e)
+    }
+    
+
+
+    
+});
 
 /*
  * Create and store a new Assignment with specified data and adds it to the
@@ -8,27 +40,41 @@ const router = require('express').Router();
  * authenticated 'instructor' User whose ID matches the instructorId of the Course
  * corresponding to the Assignment's courseId can create an Assignment.
  */
-router.post('/', (req, res) => {
+router.post('/',requireAuthentication,async function (req, res){
     // [TODO) Implement this
-    res.send(201, {
-        courseId: 123,
-        title: 'Assignment 3',
-        points: 100,
-        due: '2022-06-14T17:00:00-07:00',
-    });
+    try{
+        const user = await User.findByPk(req.user)
+        //get array of courses the database has
+        
+        if(user.role === 'admin' || user.role === 'instructor')
+        {
+            //check if the course exists in the database
+            
+            const assignment = await Assignment.create(req.body)
+            res.send(201, {
+                id: assignment.id
+            });
+        }
+        else{
+            return res.status(403).send({error: 'Not authorized to access the specified resource'})
+        }
+
+    }catch(e)
+    {
+        next(e)
+    }
+
+    
 });
 
 /*
  * Returns summary data about the Assignment, excluding the list of Submissions.
  */
-router.get('/:id', (req, res) => {
+router.get('/:id', async function(req, res){
     // [TODO) Implement this
-    res.send(200, {
-        courseId: 123,
-        title: 'Assignment 3',
-        points: 100,
-        due: '2022-06-14T17:00:00-07:00',
-    });
+    const assignment = await Assignment.findByPk(req.params.id)
+    res.send(200, assignment)
+    
 });
 
 /*
@@ -38,14 +84,38 @@ router.get('/:id', (req, res) => {
  * the Course corresponding to the Assignment's courseId can update an
  * Assignment.
  */
-router.patch('/:id', (req, res) => {
+router.patch('/:id', requireAuthentication,async (req, res,next) => {
     // [TODO) Implement this
-    res.send(200, {
-        courseId: 123,
-        title: 'Assignment 3',
-        points: 100,
-        due: '2022-06-14T17:00:00-07:00',
-    });
+    const user = await User.findByPk(req.user)
+
+    try{
+        if(user.role === 'admin' || user.role === 'instructor')
+            {
+        const course = await Course.findByPk(req.body.courseId)
+        if(!course){
+            return res.status(404).send({error: 'Course not found'})
+        }
+        const assignment = await Assignment.findByPk(req.params.id)
+        if(!assignment)
+            {
+               return res.status(404).send({error: 'Assignment not found'})
+            }
+
+        assignment.update(req.body)
+        //res send the updated message 
+        res.send(200, {
+            message: 'Assignment updated successfully'
+        })
+    }
+    else{
+        return res.status(403).send({error: 'Not authorized to access the specified resource'})
+    
+    }
+    }catch(e){
+        next(e)
+    }
+
+    
 });
 
 /*
@@ -54,9 +124,33 @@ router.patch('/:id', (req, res) => {
  * 'instructor' User whose ID matches the instructorId of the Course corresponding
  * to the Assignment's courseId can delete an Assignment.
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAuthentication,async (req, res, next) => {
     // [TODO) Implement this
-    res.send(204);
+    try{
+        const user = await User.findByPk(req.user)
+
+        if(user.role === 'admin' || user.role === 'instructor')
+            {
+                const result = await Assignment.destroy({where: {id: req.params.id}})
+                if (result > 0) {
+                    res.status(204).send(
+                        {message: 'Assignment deleted successfully'}
+                    )
+                  } else {
+                    next()
+                  }
+            }
+            else{
+                return res.status(403).send({error: 'Not authorized to access the specified resource'})
+            }
+    }
+    catch(e)
+    {
+        next(e)
+    }
+    
+    
+
 });
 
 /*
@@ -65,19 +159,43 @@ router.delete('/:id', (req, res) => {
  * 'instructor' User whose ID matches the instructorId of the Course corresponding
  * to the Assignment's courseId can fetch the Submissions for an Assignment.
  */
-router.get('/:id/submissions', (req, res) => {
+router.get('/:id/submissions', requireAuthentication,async (req, res, next) => {
     // [TODO) Implement this
-    res.send(200, {
-        submissions: [
+
+    try {
+        const user = await User.findByPk(req.user)
+        if(user.role === 'admin' || user.role === 'instructor')
             {
-                assignmentId: 123,
-                studentId: 123,
-                timestamp: '2022-06-14T17:00:00-07:00',
-                grade: 94.5,
-                file: 'string',
-            },
-        ],
-    });
+                const assignment = await Assignment.findByPk(req.params.id)
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 3
+        
+        const offset = (page - 1) * limit
+
+        const submissions = await Submission.findAndCountAll({
+            where: { assignmentId: assignment.id
+             },
+            limit,
+            offset
+        })
+
+        const totalPages = Math.ceil(submissions.count / limit)
+
+        res.send(200, {
+            submissions: submissions.rows,
+            currentPage: page,
+            totalPages
+        })
+            }
+            else{
+                return res.status(403).send({error: 'Not authorized to access the specified resource'})
+            }
+
+        
+
+    } catch (e) {
+        next(e)
+    }
 });
 
 /*
@@ -86,11 +204,51 @@ router.get('/:id/submissions', (req, res) => {
  * enrolled in the Course corresponding to the Assignment's courseId can create a
  * Submission.
  */
-router.post('/:id/submissions', (req, res) => {
+router.post('/:id/submissions',requireAuthentication ,upload.single('file'), async (req, res,next) => {
     // [TODO) Implement this
-    res.send(201, {
-        id: 123,
-    });
+    // const sub= Submission.create(req.body)
+    //check if user is student and if the student is enrolled in the course
+
+    //check if the assignment exists in the course
+
+    try{
+        const user = await User.findByPk(req.user)
+        if(user.role ==='student')
+            {
+                const assignment = await Assignment.findByPk(req.params.id)
+                if(!assignment)
+                    {
+                        res.status(404).send({error: 'Assignment not found'})
+                    }
+                    else
+                    {
+                        console.log(req.body)
+                        console.log(req.file)
+                        const sub = await Submission.create({
+                            ...req.body,
+                            file: req.file.filename,
+                            downloadlink: `/media/uploads/${req.file.filename}`,
+                            assignmentId: req.params.id
+                        })
+                        res.send(201, {
+                            id: sub.id
+                        });
+                    }
+            }
+            else
+            {
+                return res.status(403).send({error: 'You are not a student'})
+            }
+       
+        
+    }catch(e)
+    {
+        next(e)
+    }
+
+    
 });
+
+
 
 module.exports = router;

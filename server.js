@@ -69,8 +69,11 @@ async function rateLimit(req, res, next) {
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.static('public'))
+app.use('/media/uploads',express.static(`${__dirname}/uploads`))
 app.use(rateLimit)
 app.use('/', api)
+
+
 
 app.use('/', function (req, res, next) {
     res.status(404).json({

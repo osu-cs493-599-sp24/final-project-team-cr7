@@ -288,7 +288,6 @@ router.get('/:id/roster', requireAuthentication, async (req, res, next) => {
 router.get('/:id/assignments', async (req, res, next) => {
     const courseId = parseInt(req.params.id);
     try {
-        const user = await User.findByPk(req.user)
         const course = await Course.findByPk(courseId);
         
         if (!course) {

@@ -15,28 +15,29 @@ const router = Router()
  * IDs of the Courses the User is enrolled in. Only an authenticated User whose
  * ID matches the ID of the requested User can fetch this information.
  */
-router.get('/:userId', requireAuthentication, async function (req, res, next) {
+router.get('/:id', requireAuthentication, async function (req, res, next) {
     try {
-        const user = await User.findOne({ 
-            where: { email: req.user.email },
-            attributes: { exclude: ['password'] }
-        })
-        if (!user) { return res.status(404).send({ error: "User not found" }) }
-        const authenticated = await validateCredentials(user.id, req.user.password)
-        if (!authenticated || user.id != parseInt(req.params.userId)) {
+        if (req.user !== parseInt(req.params.id)) {
             return res.status(403).send({
-                error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
+                error: "Not authorized to access the specified resource"
             })
-        } else if (user.role == 'instructor') {
+        }
+        const user = await User.findByPk(req.user)
+        if (user.role == 'instructor') {
             const courses = await Course.findAll({ where: {instructorId: user.id} })
             return res.status(200).send({user: user, courses: courses})
         } else if (user.role == 'student') {
             const courses = await CourseStudents.findAll({ where: {studentId: user.id} })
             return res.status(200).send({user: user, courses: courses})
-        } else {
+        } else if (user.role == 'admin') {
             return res.status(200).send({user: user})
+        } else {
+            return res.status(403).send({
+                error: "The user does not have the necessary permissions to access the specified resource."
+            })
         }
-    } catch (err) {
+        }
+    catch (err) {
         next(err)
     }
 })
@@ -49,14 +50,7 @@ router.get('/:userId', requireAuthentication, async function (req, res, next) {
 
 router.post('/', requireAuthentication, async function (req, res, next) {
     try {
-        const user = await User.findOne({ where: { email: req.user.email } });
-        if (!user) { return res.status(404).send({ error: "User not found" }) }
-        const authenticated = await validateCredentials(user.id, req.user.password);
-        if (!authenticated) {
-            return res.status(403).send({
-                error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
-            });
-        }
+        const user = await User.findByPk(req.user)
         if (user.role === 'admin') {
             const newUser = await User.create(req.body, UserSchema);
             return res.status(201).send({ id: newUser.id });
@@ -87,9 +81,8 @@ router.post('/', requireAuthentication, async function (req, res, next) {
 router.post('/login', async function (req, res, next) {
     try {
         const user = await User.findOne({ where: { email: req.body.email } })
-        if (!user) { return res.status(404).send({ error: "User not found" }) }
         const authenticated = await validateCredentials(user.id, req.body.password)
-        if (!authenticated || user.email !== req.body.email) {
+        if (!authenticated) {
             return res.status(401).send({
                 error: "The request was not made by an authenticated User satisfying the authorization criteria described above."
             })

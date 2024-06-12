@@ -81,11 +81,11 @@ router.get('/:id', async function (req, res, next) {
     const courseId = parseInt(req.params.id);
     try {
         const course = await Course.findByPk(courseId);
-        if (course) {
-            res.status(200).send(course);
-        } else {
+        if (!course) {
             next()
         }
+
+        return res.status(200).send(course);
     } catch (err) {
         next(err)
     }
@@ -106,6 +106,11 @@ router.patch('/:id', requireAuthentication, async function (req, res, next) {
 
         const user = await User.findByPk(req.user)
         const course = await Course.findByPk(courseId);
+        
+        if (!course) {
+            next()
+        }
+        
         if (user.role !== 'admin' && req.user !== course.instructorId) {
             return res.status(403).send({error: "User does not have permission to update course"});
         }
@@ -136,6 +141,11 @@ router.delete('/:id', requireAuthentication, async function (req, res, next) {
     try {
         const user = await User.findByPk(req.user)
         const course = await Course.findByPk(courseId);
+        
+        if (!course) {
+            next()
+        }
+
         if (user.role !== 'admin' && req.user !== course.instructorId) {
             return res.status(403).send({error: "User does not have permission to delete course"});
         }
@@ -163,6 +173,11 @@ router.get('/:id/students', async (req, res, next) => {
     try {
         const user = await User.findByPk(req.user);
         const course = await Course.findByPk(courseId);
+
+        if (!course) {
+            next()
+        }
+        
         if (user.role !== 'admin' && req.user !== course.instructorId) {
             return res.status(403).send({error: "User does not have permission to view students"});
         }
@@ -197,6 +212,11 @@ router.post('/:id/students', async (req, res, next) => {
     try {
         const user = await User.findByPk(req.user);
         const course = await Course.findByPk(courseId);
+
+        if (!course) {
+            next()
+        }
+
         if (user.role !== 'admin' && req.user !== course.instructorId) {
             return res.status(403).send({error: "User does not have permission to update students"});
         }
@@ -234,6 +254,11 @@ router.get('/:id/roster', async (req, res, next) => {
     try {
         const user = await User.findByPk(req.user)
         const course = await Course.findByPk(courseId);
+                
+        if (!course) {
+            next()
+        }
+
         if (user.role !== 'admin' && req.user !== course.instructorId) {
             return res.status(403).send({error: "User does not have permission to delete course"});
         }
@@ -265,6 +290,11 @@ router.get('/:id/assignments', async (req, res, next) => {
     try {
         const user = await User.findByPk(req.user)
         const course = await Course.findByPk(courseId);
+        
+        if (!course) {
+            next()
+        }
+
         if (user.role !== 'admin' && req.user !== course.instructorId) {
             return res.status(403).send({error: "User does not have permission to delete course"});
         }

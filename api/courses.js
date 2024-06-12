@@ -1,6 +1,9 @@
 const router = require('express').Router();
 
 const { Course, CourseSchema } = require('../models/course');
+const { User } = require('../models/user');
+const { requireAuthentication } = require('../lib/auth');
+const { validateAgainstSchema, extractValidFields } = require('../lib/validation');
 
 // [INFO] '/' a.k.a the root path is actually '/courses'
 
@@ -42,19 +45,20 @@ router.get('/', async function (req, res, next) {
  * Creates a new Course with specified data and adds it to the application's
  * database. Only an authenticated User with 'admin' role can create a new Course.
  */
-router.post('/', (req, res) => {
-    // [TODO) Implement this
-    const subject = req.body.subject;
-    const number = req.body.number;
-    const title = req.body.title;
-    const term = req.body.term;
-    const instructorId = req.body.instructorId;
-    res.send(201, {
-        subject: subject,
-        number: number,
-        title: title,
-        term: term,
-        instructorId: instructorId,
+router.post('/', requireAuthentication, async function (req, res, next) {
+    const user = await User.findOne({ where: { id: req.user } });
+    if (user.role !== 'admin') {
+        return res.status(403).send({error: "User does not have permission to create a course"});
+    }
+
+    if (!validateAgainstSchema(req.body, CourseSchema)) {
+        return res.status(400).send({error: "Request body is not a valid course object"});
+    }
+
+    const course = extractValidFields(req.body, CourseSchema);
+    const newCourse = await Course.create(course);
+    res.status(201).send({
+        id: newCourse.id,
     });
 });
 
@@ -62,15 +66,18 @@ router.post('/', (req, res) => {
  * Returns summary data about the Course, excluding the list of students enrolled
  * in the course and the list of Assignments for the course.
  */
-router.get('/:id', (req, res) => {
-    // const courseId = req.params.id;
-    res.send(200, {
-        subject: 'CS',
-        number: '493',
-        title: 'Cloud Application Development',
-        term: 'sp22',
-        instructorId: 123,
-    });
+router.get('/:id', async function (req, res, next) {
+    const courseId = parseInt(req.params.id);
+    try {
+        const course = await Course.findByPk(courseId);
+        if (course) {
+            res.status(200).send(course);
+        } else {
+            next()
+        }
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -79,21 +86,33 @@ router.get('/:id', (req, res) => {
  * authenticated User with 'admin' role or an authenticated 'instructor' User
  * whose ID matches the instructorId of the Course can update Course information.
  */
-router.patch('/:id', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
-    const subject = req.body.subject;
-    const number = req.body.number;
-    const title = req.body.title;
-    const term = req.body.term;
-    const instructorId = req.body.instructorId;
-    res.send(200, {
-        subject: subject,
-        number: number,
-        title: title,
-        term: term,
-        instructorId: instructorId,
-    });
+router.patch('/:id', requireAuthentication, async function (req, res, next) {
+    const courseId = parseInt(req.params.id);
+    try {
+        if (!validateAgainstSchema(req.body, CourseSchema)) {
+            return res.status(400).send({error: "Request body is not a valid course object"});
+        }
+
+        const user = await User.findByPk(req.user)
+        const course = await Course.findByPk(courseId);
+        if (user.role !== 'admin' && req.user !== course.instructorId) {
+            return res.status(403).send({error: "User does not have permission to update course"});
+        }
+
+        const userCourse = extractValidFields(req.body, CourseSchema);
+        const result = await Course.update(userCourse, {
+            where: { id: courseId },
+            fields: CourseSchema.keys,
+        });
+
+        if (result[0] > 0) {
+            return res.status(200).send();
+        } else {
+            next()
+        }
+    } catch (err) {
+        next(err)
+    }
 });
 
 /*
@@ -102,8 +121,7 @@ router.patch('/:id', (req, res) => {
  * can remove a Course.
  */
 router.delete('/:id', (req, res) => {
-    // [TODO) Implement this
-    //const courseId = req.params.id;
+    const courseId = parseInt(req.params.id);
     res.send(204);
 });
 

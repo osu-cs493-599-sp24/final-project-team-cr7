@@ -159,42 +159,44 @@ router.delete('/:id', requireAuthentication,async (req, res, next) => {
  * 'instructor' User whose ID matches the instructorId of the Course corresponding
  * to the Assignment's courseId can fetch the Submissions for an Assignment.
  */
-router.get('/:id/submissions', requireAuthentication,async (req, res, next) => {
-    // [TODO) Implement this
-
+router.get('/:id/submissions', requireAuthentication, async (req, res, next) => {
     try {
-        const user = await User.findByPk(req.user)
-        if(user.role === 'admin' || user.role === 'instructor')
-            {
-                const assignment = await Assignment.findByPk(req.params.id)
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 3
+        const user = await User.findByPk(req.user);
         
-        const offset = (page - 1) * limit
+        if (!user) {
+            return res.status(404).send({ error: 'User not found' });
+        }
 
-        const submissions = await Submission.findAndCountAll({
-            where: { assignmentId: assignment.id
-             },
-            limit,
-            offset
-        })
+        if (user.role === 'admin' || user.role === 'instructor') {
+            const assignment = await Assignment.findByPk(req.params.id);
 
-        const totalPages = Math.ceil(submissions.count / limit)
-
-        res.send(200, {
-            submissions: submissions.rows,
-            currentPage: page,
-            totalPages
-        })
-            }
-            else{
-                return res.status(403).send({error: 'Not authorized to access the specified resource'})
+            if (!assignment) {
+                return res.status(404).send({ error: 'Assignment not found' });
             }
 
-        
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 3;
+            const offset = (page - 1) * limit;
 
+            const submissions = await Submission.findAndCountAll({
+                where: { id: assignment.id },
+                limit,
+                offset
+            });
+
+            const totalPages = Math.ceil(submissions.count / limit);
+
+            res.status(200).send({
+                submissions: submissions.rows,
+                currentPage: page,
+                totalPages,
+                totalSubmissions: submissions.count
+            });
+        } else {
+            return res.status(403).send({ error: 'Not authorized to access the specified resource' });
+        }
     } catch (e) {
-        next(e)
+        next(e);
     }
 });
 
